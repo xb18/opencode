@@ -1,6 +1,6 @@
 export * as SessionRunnerRetry from "./retry.js"
 
-import { AIError, isContextOverflowFailure } from "@opencode/ai"
+import { AIError, isContextOverflowFailure, isRetryable } from "@opencode/ai"
 import { Agent } from "@opencode/schema/agent"
 import { Model } from "@opencode/schema/model"
 import { SessionError } from "@opencode/schema/session-error"
@@ -11,6 +11,8 @@ import { SessionEvent } from "../event.js"
 import { SessionMessage } from "../message.js"
 import { SessionSchema } from "../schema.js"
 import { toSessionError } from "../to-session-error.js"
+
+export { isRetryable }
 
 interface Input {
   readonly cause: AIError
@@ -25,43 +27,6 @@ export interface Decision {
   readonly retry: true
   readonly attempt: number
   readonly delay: number
-}
-
-export function isRetryable(error: AIError) {
-  const override = error.reason.http?.headers["x-should-retry"]
-  if (override === "true") return true
-  if (override === "false") return false
-  switch (error.reason._tag) {
-    case "RateLimit":
-    case "ProviderInternal":
-      return true
-    // A WebSocket acknowledgment marks delivery accepted before model output may exist.
-    // Read failures can still recover; the Step chooses retry versus continuation from durable output.
-    case "Transport":
-      return (
-        error.reason.delivery !== "rejected" &&
-        (error.reason.delivery !== "accepted" || error.reason.operation === "read")
-      )
-    case "InvalidProviderOutput":
-      return error.reason.classification === "incomplete-stream"
-    // Unrecognized failures retry: classification records affirmative
-    // deterministic evidence, and transient failures are exactly the ones
-    // that arrive in shapes no classifier anticipates.
-    case "UnknownProvider":
-      return true
-    case "Authentication":
-    case "QuotaExceeded":
-    case "ContentPolicy":
-    case "InvalidRequest":
-    case "UnsupportedOperation":
-    case "NoRoute":
-    case "Timeout":
-      return false
-    default: {
-      const exhaustive: never = error.reason
-      return exhaustive
-    }
-  }
 }
 
 /** Bound provider-requested delays so a hostile or buggy retry-after cannot stall a session for hours. */
