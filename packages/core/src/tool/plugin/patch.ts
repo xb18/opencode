@@ -203,11 +203,7 @@ export const Plugin = {
                     updates.set(target.absolute, next)
                   }
                 }).pipe(
-                  Effect.mapError((error) =>
-                    error instanceof ToolFailure
-                      ? error
-                      : new ToolFailure({ message: `Unable to prepare patch at ${hunk.path}`, error }),
-                  ),
+                  Effect.mapError(ToolFailure.wrap(`Unable to prepare patch at ${hunk.path}`)),
                 )
               }
 
@@ -307,9 +303,7 @@ export const Plugin = {
                 content: toModelContent(output),
                 metadata: { files: output.files },
               })),
-              Effect.mapError((error) =>
-                error instanceof ToolFailure ? error : new ToolFailure({ message: "Unable to apply patch", error }),
-              ),
+              Effect.mapError(ToolFailure.wrap("Unable to apply patch")),
             )
           },
         }),

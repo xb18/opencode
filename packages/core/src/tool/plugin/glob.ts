@@ -126,11 +126,7 @@ export const Plugin = {
                 ),
                 metadata: { count: result.entries.length, truncated: result.truncated },
               })),
-              Effect.mapError((error) =>
-                error instanceof ToolFailure
-                  ? error
-                  : new ToolFailure({ message: `Unable to find files matching ${input.pattern}`, error }),
-              ),
+              Effect.mapError(ToolFailure.wrap(`Unable to find files matching ${input.pattern}`)),
             ),
         }),
       )

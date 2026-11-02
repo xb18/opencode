@@ -242,4 +242,9 @@ export const withPartial = (error: AIError, partial: LLMResponse | undefined) =>
  * Anything thrown or yielded by a handler that is not a `ToolFailure` is
  * treated as a defect and fails the stream.
  */
-export class ToolFailure extends Tool.Error {}
+export class ToolFailure extends Tool.Error {
+  /** Keep a `ToolFailure` as is; wrap anything else with `message`. For `Effect.mapError`. */
+  static wrap(message: string) {
+    return (error: unknown) => (error instanceof ToolFailure ? error : new ToolFailure({ message, error }))
+  }
+}

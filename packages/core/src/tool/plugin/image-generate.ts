@@ -186,9 +186,7 @@ export const Plugin = {
             duration: DOWNLOAD_TIMEOUT,
             orElse: () => Effect.fail(new ToolFailure({ message: `Timed out downloading ${source}.` })),
           }),
-          Effect.mapError((error) =>
-            error instanceof ToolFailure ? error : new ToolFailure({ message: `Unable to download ${source}`, error }),
-          ),
+          Effect.mapError(ToolFailure.wrap(`Unable to download ${source}`)),
         )
       }
       const target = yield* access.authorizeRead(source, context)
@@ -374,9 +372,7 @@ export const Plugin = {
                 metadata: { path: stem, model: ref, jobID: id },
               }
             }).pipe(
-              Effect.mapError((error) =>
-                error instanceof ToolFailure ? error : new ToolFailure({ message: "Unable to generate image", error }),
-              ),
+              Effect.mapError(ToolFailure.wrap("Unable to generate image")),
             ),
         })
       })

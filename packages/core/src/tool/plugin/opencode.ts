@@ -216,11 +216,7 @@ export const Plugin = {
                 content: `Removed worktree ${target.absolute}.`,
               }
             }).pipe(
-              Effect.mapError((error) =>
-                error instanceof ToolFailure
-                  ? error
-                  : new ToolFailure({ message: `Unable to remove worktree ${input.directory}`, error }),
-              ),
+              Effect.mapError(ToolFailure.wrap(`Unable to remove worktree ${input.directory}`)),
             ),
         })
         draft.add({
